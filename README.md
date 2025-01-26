@@ -89,7 +89,7 @@ Your support keeps the project alive! Here are some suggested donation tiers:
 
 - 🚀 $20: Helps maintain the project for the long term.
 
-Donate via PayPal: [Donate Now](https://www.paypal.com/paypalme/justinduveen?country.x=ZA&amp;locale.x=en_US)
+Donate via PayPal: [Donate Now](https://www.paypal.com/paypalme/justinduveen?)
 
 ---
 
