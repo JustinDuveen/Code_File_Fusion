@@ -89,7 +89,7 @@ Your support keeps the project alive! Here are some suggested donation tiers:
 
 🚀 $20: Helps maintain the project for the long term.
 
-Donate via PayPal: PayPal.me Link
+Donate via PayPal: https://www.paypal.com/paypalme/justinduveen?country.x=ZA&locale.x=en_US
 
 License 📜
 Code_File_Fusion is open-source and licensed under the MIT License. Feel free to use, modify, and share!
