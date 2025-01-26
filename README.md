@@ -87,18 +87,16 @@ Your support keeps the project alive! Here are some suggested donation tiers:
 
 🍽️ $10: Supports an hour of development.
 
-- 🚀 $20: Helps maintain the project for the long term.
+🚀 $20: Helps maintain the project for the long term.
 
 Donate via PayPal: [Donate Now](https://www.paypal.com/paypalme/justinduveen?)
 
 ---
 
-License 📜
+License 📜: MIT License
 
 Code_File_Fusion is open-source and licensed under the MIT License. Feel free to use, modify, and share!
 
-Thank You! 🙏
+------
 
 Thank you for using Code_File_Fusion! Your support and contributions make a huge difference. Let's build something amazing together! 🚀
-
-![License](https://img.shields.io/badge/License-MIT-blue.svg)
