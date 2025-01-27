@@ -97,6 +97,7 @@ License 📜: MIT License
 
 Code_File_Fusion is open-source and licensed under the MIT License. Feel free to use, modify, and share!
 
+For_Custom_AI_Development_Work contact: justin@virtualaiworkforce.com
 ------
 
-Thank you for using Code_File_Fusion! Your support and contributions make a huge difference. Let's build something amazing together! 🚀
+Thank you for using Code_File_Fusion! Your support and contributions make a huge difference. Let's build something amazing together! 🚀 
