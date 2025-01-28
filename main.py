@@ -6,13 +6,8 @@ import pandas as pd
 import sys
 from pathlib import Path
 from typing import Tuple, List, Dict, Any, Optional
+from pop_up import show_popup 
 
-# Set page configuration
-st.set_page_config(
-    page_title="Project Code Fusion",
-    page_icon="🚀",
-    layout="wide"
-)
 
 # Configure default encoding for the script
 sys.stdout.reconfigure(encoding='utf-8')
@@ -24,13 +19,10 @@ ChunkList = List[str]
 # Constants
 EXCLUDE_DIRS = {'.git', 'venv', '__pycache__', 'node_modules', 'dist', 'build', 'models', 'embeddings', 'checkpoints'}
 EXCLUDE_EXTENSIONS = {'.pyc', '.log', '.tmp', '.cache', '.pkl', '.DS_Store', '.onnx', '.bin', '.pt', '.h5', 
-                     '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.xls', '.pdf'}
+                     '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.xls', '.pdf', '.ico'}
 EXCLUDE_PATTERNS = [r'bert', r'all-mini-lm', r'\.onnx$', r'\.bin$', r'\.pt$', r'\.h5$']
 SENSITIVE_FILES = {'.env', 'secrets.json', 'config.yml'}
 
-# Initialize session state for tracking downloads
-if 'generated_files' not in st.session_state:
-    st.session_state.generated_files = []
 
 class FileHandler:
     @staticmethod
@@ -152,31 +144,30 @@ class ContentGenerator:
 
     @staticmethod
     def create_super_file(root_dir: str, output_format: str, super_file_name: str = 'master_file.txt',
-                         exclude_dirs: List[str] = None, exclude_extensions: List[str] = None) -> List[str]:
-        """Create output file in specified format and return list of filenames."""
+                        exclude_dirs: List[str] = None, exclude_extensions: List[str] = None) -> None:
+        """Create output file in specified format."""
         if exclude_dirs is None:
             exclude_dirs = list(EXCLUDE_DIRS)
         if exclude_extensions is None:
             exclude_extensions = list(EXCLUDE_EXTENSIONS)
 
+        # Initialize session state variables
+        if 'total_files' not in st.session_state:
+            st.session_state.total_files = 0
+        if 'downloaded_files' not in st.session_state:
+            st.session_state.downloaded_files = 0
+
         try:
             if output_format == "HTML (for humans)":
                 html_content = ProjectStructure.generate_html_version(root_dir, exclude_dirs, exclude_extensions)
                 st.success("✨ HTML Generated Successfully!")
-
-                # Add HTML file to generated_files
-                html_filename = f"{super_file_name}.html"
-                st.session_state.generated_files.append(html_filename)
-                
-                
                 st.download_button(
                     label="Download HTML",
                     data=html_content,
                     file_name=f"{super_file_name}.html",
-                    mime="text/html",
-                    key="html_download"
+                    mime="text/html"
                 )
-                return [f"{super_file_name}.html"]
+                return
 
             # Handle XML and Markdown formats
             content = []
@@ -222,7 +213,9 @@ class ContentGenerator:
             full_content = "\n".join(content)
             chunks = ContentGenerator.split_content(full_content)
 
-            filenames = []
+            # Update total files in session state
+            st.session_state.total_files = len(chunks)
+
             for i, chunk in enumerate(chunks, 1):
                 ext = '.xml' if output_format == "XML (for AI/ML)" else '.md'
                 chunk_filename = f"{super_file_name}_{i}{ext}"
@@ -231,35 +224,53 @@ class ContentGenerator:
                 try:
                     chunk_path.write_text(chunk, encoding='utf-8', errors='replace')
                     st.success(f"Chunk {i} created at: {chunk_path}")
-                    filenames.append(chunk_filename)
                     
-                    st.download_button(
+                    # Create download button and track downloads
+                    if st.download_button(
                         label=f"Download {chunk_filename}",
                         data=chunk.encode('utf-8'),
                         file_name=chunk_filename,
                         mime="text/plain",
-                        key=f"chunk_{i}"
-                    )
+                        key=f"download_{i}"
+                    ):
+                        st.session_state.downloaded_files += 1
                 except Exception as e:
                     st.error(f"Error saving chunk {i}: {str(e)}")
 
-            # Update session state with all generated filenames
-            st.session_state.generated_files = filenames
-            
-            
-            return filenames
+            # Check if there are multiple files
+            if len(chunks) > 1:
+                if st.button("Download All"):
+                    for i, chunk in enumerate(chunks, 1):
+                        ext = '.xml' if output_format == "XML (for AI/ML)" else '.md'
+                        chunk_filename = f"{super_file_name}_{i}{ext}"
+                        st.download_button(
+                            label=f"Download {chunk_filename}",
+                            data=chunk.encode('utf-8'),
+                            file_name=chunk_filename,
+                            mime="text/plain",
+                            key=f"download_all_{i}"
+                        )
+                        st.session_state.downloaded_files += 1
 
-            
+            # Check if all files have been downloaded
+            if st.session_state.downloaded_files == st.session_state.total_files:
+                st.session_state.show_popup = True
+
         except Exception as e:
             st.error(f"Error generating output: {str(e)}")
             st.error(f"System encoding: {sys.getdefaultencoding()}")
             st.error(f"Filesystem encoding: {sys.getfilesystemencoding()}")
-            return []
 
-            
 
 
 def main():
+    # Set page configuration
+    st.set_page_config(
+        page_title="Project Code Fusion",
+        page_icon="🚀",
+        layout="wide"
+    )
+
     # Custom CSS
     st.markdown("""
     <style>
@@ -416,34 +427,25 @@ def main():
             return
 
         try:
-            filenames = ContentGenerator.create_super_file(
+            ContentGenerator.create_super_file(
                 root_dir=project_dir,
                 output_format=output_format,
                 super_file_name=output_filename,
                 exclude_dirs=exclude_dirs,
                 exclude_extensions=exclude_extensions
             )
+        
+        
+        # Check if the popup should be shown
+            if st.session_state.get('show_popup', False):
+                show_popup()
+                st.session_state.show_popup = False  # Reset the flag after showing the popup
 
-            # Track the generated files
-            st.session_state.generated_files = filenames
-
-            # Add a "Download All" button if files were generated
-            if filenames:
-                st.markdown("""
-                    <script>
-                    function showPopup() {
-                        alert('All files downloaded successfully! 🎉');
-                    }
-                    </script>
-                    """, unsafe_allow_html=True)
-
-                if st.button("📥 Download All Files"):
-                        st.components.v1.html('<script>showPopup()</script>', height=0)
 
         except Exception as e:
-                st.error(f"Error generating output: {str(e)}")
-                st.error(f"System encoding: {sys.getdefaultencoding()}")
-                st.error(f"Filesystem encoding: {sys.getfilesystemencoding()}")
+            st.error(f"Error generating output: {str(e)}")
+            st.error(f"System encoding: {sys.getdefaultencoding()}")
+            st.error(f"Filesystem encoding: {sys.getfilesystemencoding()}")
 
     # Help section
     st.markdown("---")
