@@ -6,8 +6,6 @@ import pandas as pd
 import sys
 from pathlib import Path
 from typing import Tuple, List, Dict, Any, Optional
-from pop_up import show_popup 
-
 
 # Configure default encoding for the script
 sys.stdout.reconfigure(encoding='utf-8')
@@ -19,7 +17,7 @@ ChunkList = List[str]
 # Constants
 EXCLUDE_DIRS = {'.git', 'venv', '__pycache__', 'node_modules', 'dist', 'build', 'models', 'embeddings', 'checkpoints'}
 EXCLUDE_EXTENSIONS = {'.pyc', '.log', '.tmp', '.cache', '.pkl', '.DS_Store', '.onnx', '.bin', '.pt', '.h5', 
-                     '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.xls', '.pdf', '.ico'}
+                     '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.xls', '.pdf'}
 EXCLUDE_PATTERNS = [r'bert', r'all-mini-lm', r'\.onnx$', r'\.bin$', r'\.pt$', r'\.h5$']
 SENSITIVE_FILES = {'.env', 'secrets.json', 'config.yml'}
 
@@ -144,18 +142,12 @@ class ContentGenerator:
 
     @staticmethod
     def create_super_file(root_dir: str, output_format: str, super_file_name: str = 'master_file.txt',
-                        exclude_dirs: List[str] = None, exclude_extensions: List[str] = None) -> None:
+                         exclude_dirs: List[str] = None, exclude_extensions: List[str] = None) -> None:
         """Create output file in specified format."""
         if exclude_dirs is None:
             exclude_dirs = list(EXCLUDE_DIRS)
         if exclude_extensions is None:
             exclude_extensions = list(EXCLUDE_EXTENSIONS)
-
-        # Initialize session state variables
-        if 'total_files' not in st.session_state:
-            st.session_state.total_files = 0
-        if 'downloaded_files' not in st.session_state:
-            st.session_state.downloaded_files = 0
 
         try:
             if output_format == "HTML (for humans)":
@@ -213,9 +205,6 @@ class ContentGenerator:
             full_content = "\n".join(content)
             chunks = ContentGenerator.split_content(full_content)
 
-            # Update total files in session state
-            st.session_state.total_files = len(chunks)
-
             for i, chunk in enumerate(chunks, 1):
                 ext = '.xml' if output_format == "XML (for AI/ML)" else '.md'
                 chunk_filename = f"{super_file_name}_{i}{ext}"
@@ -225,43 +214,19 @@ class ContentGenerator:
                     chunk_path.write_text(chunk, encoding='utf-8', errors='replace')
                     st.success(f"Chunk {i} created at: {chunk_path}")
                     
-                    # Create download button and track downloads
-                    if st.download_button(
+                    st.download_button(
                         label=f"Download {chunk_filename}",
                         data=chunk.encode('utf-8'),
                         file_name=chunk_filename,
-                        mime="text/plain",
-                        key=f"download_{i}"
-                    ):
-                        st.session_state.downloaded_files += 1
+                        mime="text/plain"
+                    )
                 except Exception as e:
                     st.error(f"Error saving chunk {i}: {str(e)}")
-
-            # Check if there are multiple files
-            if len(chunks) > 1:
-                if st.button("Download All"):
-                    for i, chunk in enumerate(chunks, 1):
-                        ext = '.xml' if output_format == "XML (for AI/ML)" else '.md'
-                        chunk_filename = f"{super_file_name}_{i}{ext}"
-                        st.download_button(
-                            label=f"Download {chunk_filename}",
-                            data=chunk.encode('utf-8'),
-                            file_name=chunk_filename,
-                            mime="text/plain",
-                            key=f"download_all_{i}"
-                        )
-                        st.session_state.downloaded_files += 1
-
-            # Check if all files have been downloaded
-            if st.session_state.downloaded_files == st.session_state.total_files:
-                st.session_state.show_popup = True
 
         except Exception as e:
             st.error(f"Error generating output: {str(e)}")
             st.error(f"System encoding: {sys.getdefaultencoding()}")
             st.error(f"Filesystem encoding: {sys.getfilesystemencoding()}")
-
-
 
 def main():
     # Set page configuration
@@ -434,14 +399,6 @@ def main():
                 exclude_dirs=exclude_dirs,
                 exclude_extensions=exclude_extensions
             )
-        
-        
-        # Check if the popup should be shown
-            if st.session_state.get('show_popup', False):
-                show_popup()
-                st.session_state.show_popup = False  # Reset the flag after showing the popup
-
-
         except Exception as e:
             st.error(f"Error generating output: {str(e)}")
             st.error(f"System encoding: {sys.getdefaultencoding()}")
